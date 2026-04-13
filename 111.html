@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Rivals 武器圖鑑與 3D 靶場</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <style>
+        /* --- 網頁排版與風格 --- */
+        body { 
+            background: #121212; 
+            color: #ffffff; 
+            font-family: '微軟正黑體', sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            overflow-x: hidden;
+        }
+        h1 { 
+            text-align: center; 
+            color: #ff4a4a; 
+            font-size: 36px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 74, 74, 0.5);
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 20px; 
+            max-width: 1200px; 
+            margin: 30px auto; 
+        }
+        .card { 
+            background: #1e1e1e; 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+            border: 1px solid #333;
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover { transform: translateY(-5px); border-color: #ff4a4a; }
+        .card h2 { margin-top: 0; color: #fff; }
+        
+        /* 標籤顏色 */
+        .tag { display: inline-block; padding: 5px 12px; border-radius: 5px; font-size: 14px; font-weight: bold; margin-bottom: 15px; align-self: flex-start; }
+        .tag.primary { background: #ff4a4a; color: white; }
+        .tag.secondary { background: #4a90e2; color: white; }
+        .tag.melee { background: #f5a623; color: black; }
+        .tag.throwable { background: #e67e22; color: white; }
+        .tag.healing { background: #2ecc71; color: black; }
+        .tag.utility { background: #9b59b6; color: white; }
+
+        .stats { background: #2a2a2a; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .stats p { margin: 5px 0; font-size: 15px; color: #ddd; }
+        .desc { font-size: 14px; color: #aaa; line-height: 1.6; flex-grow: 1; margin-bottom: 15px; }
+
+        /* 試射按鈕 */
+        .play-btn {
+            background: #ff4a4a;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.2s, transform 0.1s;
+            text-align: center;
+        }
+        .play-btn:hover { background: #ff2a2a; transform: scale(1.02); }
+        .play-btn:active { transform: scale(0.98); }
+
+        /* --- 3D 遊戲介面 --- */
+        #game-container {
+            display: none; 
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 9999;
+            background: #000;
+        }
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10000;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 24px;
+            text-shadow: 2px 2px 0 #000;
+            pointer-events: none;
+        }
+        #exit-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        #exit-btn:hover { background: red; }
+        .crosshair {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 10px; height: 10px;
+            background: #00ff00;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            pointer-events: none;
+            box-shadow: 0 0 5px #000;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🔫 Roblox Rivals 武器庫與 3D 靶場</h1>
+    <div class="grid" id="weapon-container"></div>
+
+    <div id="game-container">
+        <button id="exit-btn" onclick="stopGame()">❌ 離開靶場</button>
+        <div id="hud">
+            <div id="hud-weapon">裝備中: 測試武器</div>
+            <div id="hud-score">擊殺分數: 0</div>
+        </div>
+        <div class="crosshair"></div>
+
+        <a-scene embedded id="scene">
+            <a-camera look-controls="pointerLockEnabled: false">
+                <a-cursor opacity="0" raycaster="objects: .enemy"></a-cursor>
+            </a-camera>
+            
+            <a-sky color="#111122"></a-sky>
+            <a-plane position="0 -1.5 -4" rotation="-90 0 0" width="100" height="100" color="#1a1a2e"></a-plane>
+            <a-light type="ambient" color="#888"></a-light>
+            <a-light type="directional" position="-1 1 1" color="#fff" intensity="0.5"></a-light>
+        </a-scene>
+    </div>
+
+    <script>
+        // --- 1. 完整武器資料庫 ---
+        const weapons = [
+            // --- 主武器 ---
+            { name: "Assault Rifle", type: "主武器", tagClass: "primary", damage: "中等", fireRate: "高 (全自動)", desc: "經典的步槍，適合各種距離的交戰，穩定可靠。" },
+            { name: "Burst Rifle", type: "主武器", tagClass: "primary", damage: "中高等 (三發點放)", fireRate: "中", desc: "三發點放的步槍，中距離精準度高，爆發傷害優秀。" },
+            { name: "Shotgun", type: "主武器", tagClass: "primary", damage: "極高 (近距離)", fireRate: "低 (單發)", desc: "近戰王者，貼臉傷害極高，但遠距離無效。" },
+            { name: "Sniper", type: "主武器", tagClass: "primary", damage: "極高", fireRate: "極低 (單發/栓動)", desc: "遠距離狙擊武器，通常可以一擊必殺，需要精準瞄準。" },
+            { name: "Minigun", type: "主武器", tagClass: "primary", damage: "中等 (持續輸出高)", fireRate: "極高 (需預熱)", desc: "重型機槍，火力壓制力極強，但開火前需要預熱且移動緩慢。" },
+            { name: "Energy Rifle", type: "主武器", tagClass: "primary", damage: "中等", fireRate: "高 (能量)", desc: "發射能量彈的步槍，具有特殊的視覺效果與彈道。" },
+            { name: "RPG", type: "主武器/重武", tagClass: "primary", damage: "極高 (範圍)", fireRate: "極低", desc: "火箭筒，造成巨大的範圍爆炸傷害，適合對付躲在掩體後的敵人。" },
+            { name: "Grenade Launcher", type: "主武器/重武", tagClass: "primary", damage: "高 (範圍)", fireRate: "低", desc: "榴彈發射器，可以利用反彈將榴彈射入難以直接命中的區域。" },
+            { name: "Flamethrower", type: "主武器", tagClass: "primary", damage: "持續傷害", fireRate: "持續噴射", desc: "火焰噴射器，近距離範圍持續傷害，能造成燃燒效果。" },
+            { name: "Crossbow", type: "主武器", tagClass: "primary", damage: "高", fireRate: "低", desc: "安靜的遠距離武器，拋物線彈道，十分考驗預判。" },
+            { name: "Bow", type: "主武器", tagClass: "primary", damage: "中~高 (依蓄力)", fireRate: "低", desc: "傳統弓箭，需要蓄力以提高射程和傷害。" },
+            { name: "Paintball Gun", type: "主武器", tagClass: "primary", damage: "低~中", fireRate: "中等", desc: "漆彈槍，通常是娛樂性質或具有干擾對手視線的效果。" },
+            { name: "Gunblade", type: "主武器/混合", tagClass: "primary", damage: "多變", fireRate: "多變", desc: "結合了槍械與近戰的特殊武器，適應性極強。" },
+            { name: "Distortion", type: "主武器/特殊", tagClass: "primary", damage: "特殊", fireRate: "特殊", desc: "扭曲現實的特殊武器，能改變戰局。" },
+            { name: "Permafrost", type: "主武器/特殊", tagClass: "primary", damage: "中等", fireRate: "中等", desc: "帶有極寒冰凍效果的特殊武器，能限制敵人。" },
+
+            // --- 副武器 ---
+            { name: "Handgun", type: "副武器", tagClass: "secondary", damage: "中等", fireRate: "中 (半自動)", desc: "標準手槍，切槍快，適合主武器沒子彈時用來補槍。" },
+            { name: "Revolver", type: "副武器", tagClass: "secondary", damage: "高", fireRate: "中低 (半自動)", desc: "左輪手槍，單發傷害高，但彈匣容量小、容錯率低。" },
+            { name: "Uzi", type: "副武器", tagClass: "secondary", damage: "低", fireRate: "極高 (全自動)", desc: "衝鋒手槍，近距離爆發火力強，但後座力大且精準度低。" },
+            { name: "Shorty", type: "副武器", tagClass: "secondary", damage: "高 (近距離)", fireRate: "低 (雙管)", desc: "短管霰彈槍，副武器欄位的近戰防身利器。" },
+            { name: "Energy Pistols", type: "副武器", tagClass: "secondary", damage: "中等", fireRate: "中", desc: "發射能量彈的手槍，科技感十足。" },
+            { name: "Exogun", type: "副武器/特殊", tagClass: "secondary", damage: "高", fireRate: "低", desc: "充滿神秘感的外星/實驗性副武器。" },
+            { name: "Slingshot", type: "副武器", tagClass: "secondary", damage: "中等", fireRate: "低", desc: "彈弓，具備拋物線彈道，無聲無息的副武器。" },
+
+            // --- 近戰武器 ---
+            { name: "Knife", type: "近戰", tagClass: "melee", damage: "中等", fireRate: "快", desc: "標準小刀，切換速度快，拿在手上能增加移動速度。" },
+            { name: "Katana", type: "近戰", tagClass: "melee", damage: "高", fireRate: "中", desc: "武士刀，攻擊範圍較廣，劈砍傷害高。" },
+            { name: "Chainsaw", type: "近戰", tagClass: "melee", damage: "持續高傷", fireRate: "極快 (持續)", desc: "電鋸，近身持續造成毀滅性傷害的絞肉機。" },
+            { name: "Battle Axe", type: "近戰", tagClass: "melee", damage: "極高", fireRate: "低", desc: "戰斧，揮舞速度慢但單次傷害極高，充滿魄力。" },
+            { name: "Daggers", type: "近戰", tagClass: "melee", damage: "中低", fireRate: "極快", desc: "雙匕首，攻擊速度極快，適合貼身連續攻擊。" },
+            { name: "Scythe", type: "近戰", tagClass: "melee", damage: "高", fireRate: "中低", desc: "大鐮刀，攻擊範圍極廣，可以掃擊多個目標。" },
+            { name: "Maul", type: "近戰", tagClass: "melee", damage: "極高", fireRate: "極低", desc: "重型大錘，能造成巨大的單次打擊傷害。" },
+            { name: "Fists", type: "近戰", tagClass: "melee", damage: "低", fireRate: "中", desc: "空手搏擊，沒有裝備其他近戰武器時的預設狀態。" },
+            { name: "Riot Shield", type: "近戰/防禦", tagClass: "melee", damage: "低 (盾擊)", fireRate: "慢", desc: "防暴盾牌，主要用於阻擋前方傷害，也可進行近戰推擊。" },
+            { name: "Trowel", type: "近戰/建築", tagClass: "melee", damage: "低", fireRate: "中", desc: "抹泥刀，除了防身外也可以用來進行戰術建造。" },
+
+            // --- 投擲物 ---
+            { name: "Grenade", type: "投擲物", tagClass: "throwable", damage: "高 (範圍)", fireRate: "N/A", desc: "標準破片手榴彈，延遲爆炸，造成範圍傷害。" },
+            { name: "Molotov", type: "投擲物", tagClass: "throwable", damage: "持續區域傷害", fireRate: "N/A", desc: "燃燒瓶，在地面產生一片火海，封鎖區域。" },
+            { name: "Flashbang", type: "投擲物", tagClass: "throwable", damage: "無", fireRate: "N/A", desc: "閃光彈，使視野內的敵人暫時致盲並耳鳴，攻堅必備。" },
+            { name: "Smoke Grenade", type: "投擲物", tagClass: "throwable", damage: "無", fireRate: "N/A", desc: "煙霧彈，釋放濃煙遮蔽視線，用於掩護移動或救援隊友。" },
+            { name: "Satchel", type: "投擲物/陷阱", tagClass: "throwable", damage: "極高 (範圍)", fireRate: "N/A", desc: "遙控炸藥包，可以黏附在表面，玩家伺機手動引爆。" },
+            { name: "Subspace Tripmine", type: "投擲物/陷阱", tagClass: "throwable", damage: "高", fireRate: "N/A", desc: "亞空間絆雷，敵人觸發時產生致命爆炸。" },
+
+            // --- 醫療與戰術裝備 ---
+            { name: "Medkit", type: "消耗品", tagClass: "healing", damage: "恢復生命", fireRate: "N/A", desc: "醫療包，使用後可恢復大量生命值，使用期間無法開火。" },
+            { name: "Freeze Ray", type: "戰術裝備", tagClass: "utility", damage: "低", fireRate: "持續", desc: "冷凍射線，用於減緩敵人移動速度，干擾走位。" },
+            { name: "Flare Gun", type: "戰術裝備", tagClass: "utility", damage: "極低", fireRate: "單發", desc: "信號槍，用於標記位置或呼叫支援。" },
+            { name: "War Horn", type: "戰術裝備", tagClass: "utility", damage: "無", fireRate: "N/A", desc: "戰鬥號角，吹響後能為自己或隊友提供短暫的增益效果(Buff)。" },
+            { name: "Jump Pad", type: "佈署物", tagClass: "utility", damage: "無", fireRate: "N/A", desc: "彈跳墊，放置在地面上，踩上去可以獲得極高的跳躍能力。" },
+            { name: "Warper", type: "戰術裝備", tagClass: "utility", damage: "無", fireRate: "N/A", desc: "空間傳送裝置，用於戰術轉移或逃生。" },
+            { name: "Warpstone", type: "戰術裝備", tagClass: "utility", damage: "無", fireRate: "N/A", desc: "傳送石，能將玩家瞬間移動到特定位置。" },
+            { name: "Spray", type: "裝飾品", tagClass: "utility", damage: "無", fireRate: "N/A", desc: "噴漆，可以在牆上或地板留下專屬圖案，嘲諷滿分。" }
+        ];
+
+        // 產生武器卡片
+        const container = document.getElementById('weapon-container');
+        weapons.forEach(w => {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.innerHTML = `
+                <h2>${w.name}</h2>
+                <span class="tag ${w.tagClass}">${w.type}</span>
+                <div class="stats">
+                    <p><strong>⚔️ 傷害/效果:</strong> ${w.damage}</p>
+                    <p><strong>⏱️ 射速/屬性:</strong> ${w.fireRate}</p>
+                </div>
+                <div class="desc">${w.desc}</div>
+                <button class="play-btn" onclick="startGame('${w.name}')">🎮 進入靶場試用</button>
+            `;
+            container.appendChild(card);
+        });
+
+        // --- 2. 3D 遊戲邏輯 ---
+        let score = 0;
+        let gameInterval;
+        const scene = document.getElementById('scene');
+
+        // 啟動遊戲
+        function startGame(weaponName) {
+            document.getElementById('game-container').style.display = 'block';
+            document.getElementById('hud-weapon').innerText = '裝備中: 🔴 ' + weaponName;
+            score = 0;
+            updateScore();
+            
+            // 每 1.2 秒產生一個敵人
+            gameInterval = setInterval(spawnEnemy, 1200);
+        }
+
+        // 關閉遊戲
+        function stopGame() {
+            document.getElementById('game-container').style.display = 'none';
+            clearInterval(gameInterval);
+            
+            const enemies = document.querySelectorAll('.enemy');
+            enemies.forEach(e => e.remove());
+        }
+
+        // 更新分數
+        function updateScore() {
+            document.getElementById('hud-score').innerText = '擊殺分數: ' + score;
+        }
+
+        // 隨機產生敵人 (3D 方塊)
+        function spawnEnemy() {
+            const enemy = document.createElement('a-box');
+            enemy.setAttribute('class', 'enemy');
+            enemy.setAttribute('color', '#ff0044'); 
+            
+            // 隨機位置 (X: 左右, Y: 高度, Z: 前後距離)
+            const x = (Math.random() - 0.5) * 16;
+            const y = Math.random() * 5;
+            const z = - (Math.random() * 10 + 4); 
+            
+            enemy.setAttribute('position', `${x} ${y} ${z}`);
+            
+            // 旋轉動畫
+            enemy.setAttribute('animation', 'property: rotation; to: 360 360 0; loop: true; dur: 2500');
+
+            // 點擊事件 (命中處理)
+            enemy.addEventListener('click', function() {
+                // 變色縮小效果
+                this.setAttribute('color', '#ffff00');
+                this.setAttribute('scale', '0.1 0.1 0.1');
+                
+                score += 10;
+                updateScore();
+
+                // 移除實體
+                setTimeout(() => {
+                    if (this.parentNode) this.parentNode.removeChild(this);
+                }, 150);
+            });
+
+            scene.appendChild(enemy);
+
+            // 3.5秒後自動消失 (未擊中)
+            setTimeout(() => {
+                if (enemy.parentNode) enemy.parentNode.removeChild(enemy);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
