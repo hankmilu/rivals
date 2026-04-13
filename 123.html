@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>FPS 升級版</title>
+<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+<style>
+body { margin:0; background:#000; overflow:hidden; }
+
+#hud {
+  position:absolute; top:10px; left:10px;
+  color:#0f0; font-family:monospace;
+}
+
+#crosshair {
+  position:absolute;
+  top:50%; left:50%;
+  width:12px; height:12px;
+  border:2px solid #0f0;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+}
+
+#leaderboard {
+  position:absolute;
+  right:10px; top:10px;
+  color:#fff;
+}
+</style>
+</head>
+
+<body>
+
+<div id="hud">
+HP: <span id="hp">100</span><br>
+Score: <span id="score">0</span>
+</div>
+
+<div id="leaderboard">
+🏆 排行榜<br>
+<ol id="rank"></ol>
+</div>
+
+<div id="crosshair"></div>
+
+<a-scene embedded>
+<a-camera id="cam" wasd-controls look-controls="pointerLockEnabled: true">
+</a-camera>
+
+<a-light type="ambient" color="#888"></a-light>
+<a-plane rotation="-90 0 0" width="100" height="100" color="#222"></a-plane>
+
+</a-scene>
+
+<script>
+
+// === 武器設定（不同射速） ===
+const weapons = {
+  rifle: { fireRate: 120, damage: 10, spread: 0.01 },
+  shotgun: { fireRate: 600, damage: 25, spread: 0.08 },
+  rpg: { fireRate: 1200, damage: 80, spread: 0.02, explosive:true }
+};
+
+let currentWeapon = weapons.rifle;
+let lastShot = 0;
+
+let hp = 100;
+let score = 0;
+
+// === 射擊（真子彈） ===
+document.addEventListener("click", () => {
+  let now = Date.now();
+  if (now - lastShot < currentWeapon.fireRate) return;
+  lastShot = now;
+
+  shootBullet();
+});
+
+function shootBullet(){
+  const cam = document.querySelector("#cam");
+  const bullet = document.createElement("a-sphere");
+
+  bullet.setAttribute("radius","0.05");
+  bullet.setAttribute("color","#ff0");
+
+  // 取得方向 + 擴散
+  const dir = new THREE.Vector3();
+  cam.object3D.getWorldDirection(dir);
+
+  dir.x += (Math.random()-0.5)*currentWeapon.spread;
+  dir.y += (Math.random()-0.5)*currentWeapon.spread;
+
+  const pos = cam.object3D.position;
+  bullet.setAttribute("position", pos);
+
+  document.querySelector("a-scene").appendChild(bullet);
+
+  let speed = 0.5;
+
+  let move = setInterval(()=>{
+    bullet.object3D.position.add(dir.clone().multiplyScalar(speed));
+
+    // 命中判定
+    document.querySelectorAll(".enemy").forEach(e=>{
+      if(e.object3D.position.distanceTo(bullet.object3D.position)<0.7){
+
+        // RPG 爆炸
+        if(currentWeapon.explosive){
+          explode(e.object3D.position);
+        }
+
+        hitEnemy(e);
+        bullet.remove();
+        clearInterval(move);
+      }
+    });
+
+  },30);
+
+  setTimeout(()=>{ bullet.remove(); clearInterval(move); },2000);
+}
+
+// === 爆炸系統 ===
+function explode(pos){
+  document.querySelectorAll(".enemy").forEach(e=>{
+    if(e.object3D.position.distanceTo(pos)<3){
+      hitEnemy(e);
+    }
+  });
+}
+
+// === 敵人 ===
+function spawnEnemy(){
+  const e = document.createElement("a-box");
+  e.setAttribute("class","enemy");
+  e.setAttribute("color","#f00");
+
+  e.setAttribute("position",`
+    ${(Math.random()-0.5)*10}
+    1
+    ${-5 - Math.random()*10}
+  `);
+
+  document.querySelector("a-scene").appendChild(e);
+
+  enemyShoot(e);
+
+  setTimeout(()=> e.remove(),10000);
+}
+
+setInterval(spawnEnemy,1500);
+
+// === 敵人攻擊你 ===
+function enemyShoot(enemy){
+  let shoot = setInterval(()=>{
+
+    if(!enemy.parentNode){
+      clearInterval(shoot);
+      return;
+    }
+
+    const cam = document.querySelector("#cam");
+
+    if(enemy.object3D.position.distanceTo(cam.object3D.position)<10){
+      hp -= 5;
+      updateHUD();
+    }
+
+  },1000);
+}
+
+// === 命中 ===
+function hitEnemy(e){
+  score += 10;
+  updateHUD();
+  e.remove();
+}
+
+// === HUD ===
+function updateHUD(){
+  document.getElementById("hp").innerText = hp;
+  document.getElementById("score").innerText = score;
+
+  if(hp<=0){
+    saveScore();
+    alert("你死了！");
+    location.reload();
+  }
+}
+
+// === 排行榜（LocalStorage）===
+function saveScore(){
+  let list = JSON.parse(localStorage.getItem("rank")||"[]");
+  list.push(score);
+  list.sort((a,b)=>b-a);
+  list = list.slice(0,5);
+  localStorage.setItem("rank",JSON.stringify(list));
+}
+
+function loadRank(){
+  let list = JSON.parse(localStorage.getItem("rank")||"[]");
+  const el = document.getElementById("rank");
+  el.innerHTML="";
+  list.forEach(s=>{
+    let li = document.createElement("li");
+    li.innerText = s;
+    el.appendChild(li);
+  });
+}
+
+loadRank();
+
+</script>
+
+</body>
+</html>
