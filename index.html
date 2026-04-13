@@ -1,0 +1,386 @@
+// 📦 你的武器資料庫！
+const weapons = [
+    // ----------------------------------------------------------------------
+    // PRIMARY WEAPONS (主武器) - Tag: primary
+    // ----------------------------------------------------------------------
+    {
+        name: "Assault Rifle",
+        type: "主武器",
+        tagClass: "primary",
+        damage: "中等",
+        fireRate: "高 (全自動)",
+        desc: "經典的步槍，適合各種距離的交戰，穩定可靠。"
+    },
+    {
+        name: "Burst Rifle",
+        type: "主武器",
+        tagClass: "primary",
+        damage: "中高等 (三發點放)",
+        fireRate: "中",
+        desc: "三發點放的步槍，中距離精準度高，爆發傷害優秀。"
+    },
+    {
+        name: "Shotgun",
+        type: "主武器",
+        tagClass: "primary",
+        damage: "極高 (近距離)",
+        fireRate: "低 (單發)",
+        desc: "近戰王者，貼臉傷害極高，但遠距離無效。"
+    },
+    {
+        name: "Sniper",
+        type: "主武器",
+        tagClass: "primary",
+        damage: "極高",
+        fireRate: "極低 (單發/栓動)",
+        desc: "遠距離狙擊武器，通常可以一擊必殺，需要精準瞄準。"
+    },
+    {
+        name: "Minigun",
+        type: "主武器",
+        tagClass: "primary",
+        damage: "中等 (持續輸出高)",
+        fireRate: "極高 (需預熱)",
+        desc: "重型機槍，火力壓制力極強，但開火前需要預熱且移動緩慢。"
+    },
+    {
+        name: "Energy Rifle",
+        type: "主武器",
+        tagClass: "primary",
+        damage: "中等",
+        fireRate: "高 (能量)",
+        desc: "發射能量彈的步槍，可能具有特殊的彈道或視覺效果。"
+    },
+    {
+        name: "RPG",
+        type: "主武器/重武器",
+        tagClass: "primary",
+        damage: "極高 (範圍傷害)",
+        fireRate: "極低",
+        desc: "火箭筒，造成巨大的範圍爆炸傷害，適合對付躲在掩體後的敵人。"
+    },
+    {
+        name: "Grenade Launcher",
+        type: "主武器/重武器",
+        tagClass: "primary",
+        damage: "高 (範圍傷害)",
+        fireRate: "低",
+        desc: "榴彈發射器，可以利用反彈將榴彈射入難以直接命中的區域。"
+    },
+    {
+        name: "Flamethrower",
+        type: "主武器/特殊",
+        tagClass: "primary",
+        damage: "持續傷害",
+        fireRate: "持續噴射",
+        desc: "火焰噴射器，近距離範圍持續傷害，能造成燃燒效果。"
+    },
+    {
+        name: "Crossbow",
+        type: "主武器/特殊",
+        tagClass: "primary",
+        damage: "高",
+        fireRate: "低",
+        desc: "安靜的遠距離武器，拋物線彈道，可能帶有特殊箭矢。"
+    },
+    {
+        name: "Bow",
+        type: "主武器/特殊",
+        tagClass: "primary",
+        damage: "中等~高 (依蓄力)",
+        fireRate: "低",
+        desc: "傳統弓箭，需要蓄力以提高射程和傷害。"
+    },
+    {
+        name: "Paintball Gun",
+        type: "主武器/特殊",
+        tagClass: "primary",
+        damage: "低~中",
+        fireRate: "中等",
+        desc: "漆彈槍，通常是娛樂性質或具有干擾視線的效果。"
+    },
+    {
+        name: "Gunblade",
+        type: "主武器/混合",
+        tagClass: "primary",
+        damage: "多變",
+        fireRate: "多變",
+        desc: "結合了槍械與近戰的特殊武器，適應性強。"
+    },
+    {
+        name: "Distortion",
+        type: "主武器/特殊",
+        tagClass: "primary",
+        damage: "?",
+        fireRate: "?",
+        desc: "(特殊武器，具體屬性依遊戲內設定為主)"
+    },
+    {
+        name: "Permafrost",
+        type: "主武器/特殊",
+        tagClass: "primary",
+        damage: "?",
+        fireRate: "?",
+        desc: "(帶有冰凍效果的特殊武器)"
+    },
+
+    // ----------------------------------------------------------------------
+    // SECONDARY WEAPONS (副武器) - Tag: secondary
+    // ----------------------------------------------------------------------
+    {
+        name: "Handgun",
+        type: "副武器",
+        tagClass: "secondary",
+        damage: "中等",
+        fireRate: "中 (半自動)",
+        desc: "標準手槍，切槍快，適合用來補槍。"
+    },
+    {
+        name: "Revolver",
+        type: "副武器",
+        tagClass: "secondary",
+        damage: "高",
+        fireRate: "中低 (半自動)",
+        desc: "左輪手槍，單發傷害高，但彈匣容量小。"
+    },
+    {
+        name: "Uzi",
+        type: "副武器",
+        tagClass: "secondary",
+        damage: "低",
+        fireRate: "極高 (全自動)",
+        desc: "衝鋒手槍，近距離爆發火力強，但後座力大且精準度低。"
+    },
+    {
+        name: "Shorty",
+        type: "副武器",
+        tagClass: "secondary",
+        damage: "高 (近距離)",
+        fireRate: "低 (雙管)",
+        desc: "短管霰彈槍，極近距離防身利器。"
+    },
+    {
+        name: "Energy Pistols",
+        type: "副武器",
+        tagClass: "secondary",
+        damage: "中等",
+        fireRate: "中",
+        desc: "發射能量彈的雙持或單把手槍。"
+    },
+    {
+        name: "Exogun",
+        type: "副武器/特殊",
+        tagClass: "secondary",
+        damage: "?",
+        fireRate: "?",
+        desc: "(特殊副武器，可能具備獨特功能)"
+    },
+    {
+        name: "Slingshot",
+        type: "副武器/特殊",
+        tagClass: "secondary",
+        damage: "中等",
+        fireRate: "低",
+        desc: "彈弓，可能用來發射特殊彈藥或具備拋物線彈道。"
+    },
+
+    // ----------------------------------------------------------------------
+    // MELEE WEAPONS (近戰武器) - Tag: melee
+    // ----------------------------------------------------------------------
+    {
+        name: "Knife",
+        type: "近戰",
+        tagClass: "melee",
+        damage: "中等",
+        fireRate: "快",
+        desc: "標準小刀，切換速度快，增加移動速度。"
+    },
+    {
+        name: "Katana",
+        type: "近戰",
+        tagClass: "melee",
+        damage: "高",
+        fireRate: "中",
+        desc: "武士刀，攻擊範圍較廣，傷害高。"
+    },
+    {
+        name: "Chainsaw",
+        type: "近戰",
+        tagClass: "melee",
+        damage: "持續高傷",
+        fireRate: "極快 (持續)",
+        desc: "電鋸，近身持續造成毀滅性傷害。"
+    },
+    {
+        name: "Battle Axe",
+        type: "近戰",
+        tagClass: "melee",
+        damage: "極高",
+        fireRate: "低",
+        desc: "戰斧，揮舞速度慢但單次傷害極高。"
+    },
+    {
+        name: "Daggers",
+        type: "近戰",
+        tagClass: "melee",
+        damage: "中低 (雙擊)",
+        fireRate: "極快",
+        desc: "雙匕首，攻擊速度極快，適合貼身連續攻擊。"
+    },
+    {
+        name: "Scythe",
+        type: "近戰",
+        tagClass: "melee",
+        damage: "高",
+        fireRate: "中低",
+        desc: "大鐮刀，攻擊範圍極廣。"
+    },
+    {
+        name: "Maul",
+        type: "近戰",
+        tagClass: "melee",
+        damage: "極高",
+        fireRate: "極低",
+        desc: "重型大錘，可能帶有擊飛或破甲效果。"
+    },
+    {
+        name: "Fists",
+        type: "近戰",
+        tagClass: "melee",
+        damage: "低",
+        fireRate: "中",
+        desc: "空手搏擊，通常是沒有裝備其他近戰武器時的預設狀態。"
+    },
+    {
+        name: "Riot Shield",
+        type: "近戰/防禦",
+        tagClass: "melee",
+        damage: "低 (盾擊)",
+        fireRate: "慢",
+        desc: "防暴盾牌，主要用於阻擋前方傷害，也可進行近戰推擊。"
+    },
+    {
+        name: "Trowel",
+        type: "近戰/建築",
+        tagClass: "melee",
+        damage: "低",
+        fireRate: "中",
+        desc: "抹泥刀，在某些模式下可能用於建造或有特殊作用。"
+    },
+
+    // ----------------------------------------------------------------------
+    // THROWABLES & UTILITIES (投擲物與道具) - Tag: throwable
+    // ----------------------------------------------------------------------
+    {
+        name: "Grenade",
+        type: "投擲物",
+        tagClass: "throwable",
+        damage: "高 (範圍)",
+        fireRate: "N/A",
+        desc: "標準破片手榴彈，延遲爆炸，造成範圍傷害。"
+    },
+    {
+        name: "Molotov",
+        type: "投擲物",
+        tagClass: "throwable",
+        damage: "持續區域傷害",
+        fireRate: "N/A",
+        desc: "燃燒瓶，在地面產生一片火海，封鎖區域。"
+    },
+    {
+        name: "Flashbang",
+        type: "投擲物",
+        tagClass: "throwable",
+        damage: "無",
+        fireRate: "N/A",
+        desc: "閃光彈，使視野內的敵人暫時致盲並耳鳴。"
+    },
+    {
+        name: "Smoke Grenade",
+        type: "投擲物",
+        tagClass: "throwable",
+        damage: "無",
+        fireRate: "N/A",
+        desc: "煙霧彈，釋放濃煙遮蔽視線，用於掩護移動或干擾狙擊。"
+    },
+    {
+        name: "Satchel",
+        type: "投擲物/陷阱",
+        tagClass: "throwable",
+        damage: "極高 (範圍)",
+        fireRate: "N/A",
+        desc: "遙控炸藥包，可以黏附在表面，玩家手動引爆。"
+    },
+    {
+        name: "Subspace Tripmine",
+        type: "投擲物/陷阱",
+        tagClass: "throwable",
+        damage: "高",
+        fireRate: "N/A",
+        desc: "絆雷，敵人觸發光束時爆炸，並可能帶有特殊音效或效果。"
+    },
+    {
+        name: "Freeze Ray",
+        type: "戰術裝備",
+        tagClass: "throwable", // 歸類在道具類別
+        damage: "低",
+        fireRate: "持續",
+        desc: "冷凍射線，用於減緩敵人速度或將其凍結。"
+    },
+    {
+        name: "Flare Gun",
+        type: "戰術裝備",
+        tagClass: "throwable",
+        damage: "極低",
+        fireRate: "單發",
+        desc: "信號槍，可能用於標記敵人位置、呼叫空投或點燃目標。"
+    },
+    {
+        name: "War Horn",
+        type: "戰術裝備",
+        tagClass: "throwable",
+        damage: "無",
+        fireRate: "N/A",
+        desc: "戰鬥號角，吹響後可能為自己或隊友提供短暫的增益效果(Buff)。"
+    },
+    {
+        name: "Medkit",
+        type: "消耗品",
+        tagClass: "throwable", // 用顏色區分，或可新增一個 'healing' 標籤
+        damage: "恢復生命",
+        fireRate: "N/A",
+        desc: "醫療包，使用後可恢復大量生命值，需要引導時間。"
+    },
+    {
+        name: "Jump Pad",
+        type: "佈署物",
+        tagClass: "throwable",
+        damage: "無",
+        fireRate: "N/A",
+        desc: "彈跳墊，放置在地面上，踩上去可以跳躍到極高的高度。"
+    },
+    {
+        name: "Warper",
+        type: "戰術裝備/特殊",
+        tagClass: "throwable",
+        damage: "無",
+        fireRate: "N/A",
+        desc: "可能用於短距離傳送或改變位置的裝置。"
+    },
+    {
+        name: "Warpstone",
+        type: "戰術裝備/特殊",
+        tagClass: "throwable",
+        damage: "無",
+        fireRate: "N/A",
+        desc: "傳送石，允許玩家傳送回特定地點或進行位移。"
+    },
+    {
+        name: "Spray",
+        type: "裝飾品",
+        tagClass: "throwable", // 裝飾品
+        damage: "無",
+        fireRate: "N/A",
+        desc: "噴漆，在牆壁或地板上留下圖案，無實質戰鬥作用。"
+    }
+];
